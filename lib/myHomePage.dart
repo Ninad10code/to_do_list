@@ -62,7 +62,11 @@ class _MyHomePageState extends State<MyHomePage> {
                         Icons.delete,
                         color: Colors.black54,
                       ),
-                      onPressed: () {}),
+                      onPressed: () {
+                        setState(() {
+                          toDos.removeAt(index);
+                        });
+                      }),
                 ),
               ),
             );
