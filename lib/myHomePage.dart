@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 class MyHomePage extends StatefulWidget {
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -8,11 +8,18 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   List toDos = List();
   String input = '';
-  @override
-  void initState() {
-    super.initState();
-    toDos.add('item1');
-    toDos.add('item2');
+  createToDos(){
+    DocumentReference documentReference = Firestore.instance.collection("MyToDos").document(input);
+    Map<String,String>todos={
+      "todoTitle":input
+    };
+    documentReference.setData(todos).whenComplete((){
+      print("$input created");
+    });
+  }
+
+  deleteToDos(){
+
   }
 
   @override
@@ -47,30 +54,36 @@ class _MyHomePageState extends State<MyHomePage> {
                   );
                 });
           }),
-      body: ListView.builder(
-          itemCount: toDos.length,
-          itemBuilder: (BuildContext context, int index) {
-            return Dismissible(
-              key: Key(toDos[index]),
-              child: Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-                elevation: 4,
-                child: ListTile(
-                  title: Text(toDos[index]),
-                  trailing: IconButton(
-                      icon: Icon(
-                        Icons.delete,
-                        color: Colors.black54,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          toDos.removeAt(index);
-                        });
-                      }),
-                ),
-              ),
-            );
-          }),
+      body: StreamBuilder(stream: Firestore.instance.collection("MyToDos").snapshots(),
+        builder: (context,snapshots){
+          return ListView.builder(
+            shrinkWrap: true,
+              itemCount: snapshots.data.documents.length,
+              itemBuilder: (context, int index) {
+                DocumentSnapshot documentSnapshot = snapshots.data.documents[index];
+                return Dismissible(
+                  key: Key(index.toString()),
+                  child: Card(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                    elevation: 4,
+                    child: ListTile(
+                      title: Text(documentSnapshot.data[index]),
+                      trailing: IconButton(
+                          icon: Icon(
+                            Icons.delete,
+                            color: Colors.black54,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              toDos.removeAt(index);
+                            });
+                          }),
+                    ),
+                  ),
+                );
+              });
+        },
+      )
     );
   }
 }
